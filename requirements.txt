@@ -1,0 +1,9 @@
+pandas
+numpy
+scipy
+scipy
+scikit-learn
+lightfm
+implicit
+fastapi
+uvicorn
