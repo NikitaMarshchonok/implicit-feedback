@@ -1,5 +1,5 @@
 # src/evaluate.py
-
+'''
 import os
 import numpy as np
 import pandas as pd
@@ -82,3 +82,68 @@ if __name__ == '__main__':
     prec = precision_at_k(model, train_mat, test_df, u2i, i2i, K=10)
     print(f'Precision@10 (на тесте ~20%): {prec:.4f}')
 
+'''
+
+
+# src/evaluate.py
+
+import os
+import numpy as np
+import pandas as pd
+from scipy.sparse import coo_matrix
+from lightfm import LightFM
+from sklearn.model_selection import train_test_split
+
+def load_ratings():
+    DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'ml-100k')
+    path = os.path.join(DATA_DIR, 'u.data')
+    df = pd.read_csv(path, sep='\t', names=['user_id','item_id','rating','timestamp'])
+    return df.drop(columns=['timestamp'])
+
+def build_matrix(df, alpha=10.0):
+    users = df['user_id'].unique()
+    items = df['item_id'].unique()
+    u2i = {u:i for i,u in enumerate(users)}
+    i2i = {i:j for j,i in enumerate(items)}
+    rows = df['user_id'].map(u2i)
+    cols = df['item_id'].map(i2i)
+    data = 1.0 + alpha * df['rating'].astype(np.float32)
+    mat = coo_matrix((data, (rows, cols)),
+                     shape=(len(users), len(items))).tocsr()
+    return mat, u2i, i2i
+
+def train_lightfm(train_mat, no_components=30, loss='warp', epochs=30):
+    model = LightFM(no_components=no_components, loss=loss)
+    model.fit(train_mat, epochs=epochs, num_threads=4)
+    return model
+
+def precision_at_k_lfm(model, train_mat, test_df, u2i, i2i, K=10):
+    test_by_user = test_df.groupby('user_id')['item_id'].apply(set).to_dict()
+    precisions = []
+
+    for user, true_items in test_by_user.items():
+        if user not in u2i:
+            continue
+        uidx = u2i[user]
+        n_items = train_mat.shape[1]
+        all_items = np.arange(n_items)
+        scores = model.predict(uidx, all_items)
+        seen = set(train_mat[uidx].indices)
+        ranked = np.argsort(-scores)
+        recs = [i for i in ranked if i not in seen][:K]
+        idx2item = {v:k for k,v in i2i.items()}
+        rec_items = {idx2item[i] for i in recs}
+        precisions.append(len(rec_items & true_items) / K)
+
+    return np.mean(precisions)
+
+if __name__ == '__main__':
+    ratings = load_ratings()
+    train_df, test_df = train_test_split(ratings, test_size=0.2, random_state=42)
+    train_mat, u2i, i2i = build_matrix(train_df, alpha=10.0)
+
+    print('Training LightFM on train set…')
+    lfm = train_lightfm(train_mat, no_components=30, loss='warp', epochs=30)
+
+    prec = precision_at_k_lfm(lfm, train_mat, test_df, u2i, i2i, K=10)
+    print(f'Precision@10 (LightFM): {prec:.4f}')
