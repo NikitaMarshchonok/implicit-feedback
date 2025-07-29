@@ -1,32 +1,27 @@
 # Dockerfile for Recommender Service
 
-# Use official slim Python 3.11 image
+# 1. Базовый образ Python 3.11 slim
 FROM python:3.11-slim
 
-# Set working directory
+# 2. Рабочая директория
 WORKDIR /app
 
-# Install build dependencies for compiling LightFM and implicit
+# 3. Сборка нативных зависимостей
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       build-essential python3-dev libopenblas-dev libomp-dev \
+         build-essential python3-dev libopenblas-dev libomp-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency definitions and install
+# 4. Установка Python-зависимостей
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
+RUN pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-# Copy entire project
+# 5. Копирование кода приложения
 COPY . .
 
-# Expose port for FastAPI
+# 6. Документируем, что контейнер слушает 8080
 EXPOSE 8080
 
-# Start FastAPI with Uvicorn
-# по умолчанию слушаем на 8080 (Cloud Run передаёт в PORT)
-ENV PORT 8080
-
-# запускаем uvicorn, подхватывая порт из переменной
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
-
+# 7. Запускаем uvicorn на порту 8080
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
