@@ -18,6 +18,12 @@ idx2item = {v:k for k,v in item2idx.items()}
 
 app = FastAPI(title="Recommender API")
 
+# --- добавили health-check ---
+@app.get("/")
+def health_check():
+    return {"status": "ok"}
+# ------------------------------
+
 @app.get("/recommend/{user_id}")
 def recommend(user_id: int, N: int = 10):
     if user_id not in user2idx:
