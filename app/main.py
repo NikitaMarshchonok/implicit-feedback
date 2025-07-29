@@ -18,6 +18,14 @@ idx2item = {v:k for k,v in item2idx.items()}
 
 app = FastAPI(title="Recommender API")
 
+@app.get("/", include_in_schema=False)
+async def health_check():
+    """
+    Root endpoint for Cloud Run startup probe.
+    """
+    return {"status": "ok"}
+
+
 # --- добавили health-check ---
 @app.get("/")
 def health_check():
