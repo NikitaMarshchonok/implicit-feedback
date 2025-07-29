@@ -21,7 +21,12 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY . .
 
 # Expose port for FastAPI
-EXPOSE 8000
+EXPOSE 8080
 
 # Start FastAPI with Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# по умолчанию слушаем на 8080 (Cloud Run передаёт в PORT)
+ENV PORT 8080
+
+# запускаем uvicorn, подхватывая порт из переменной
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
+
