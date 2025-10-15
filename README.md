@@ -21,6 +21,11 @@
 
 This is a microservice for generating item recommendations based on implicit feedback (e.g. views, likes) using collaborative filtering (ALS and LightFM). It:
 
+- Trains a recommendation model on MovieLens 100k data.  
+- Exposes a REST API via FastAPI and Uvicorn.  
+- Packs into Docker, with a production-ready `Dockerfile`.  
+- Integrates with CI/CD to build & push images.  
+- Deploys to Google Cloud Run with automatic SSL and scaling.
 
 ---
 
