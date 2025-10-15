@@ -1,6 +1,6 @@
 # Implicit Feedback Recommender System
 
-![Architecture](./docs/architecture.png)
+
 
 ## Table of Contents
 
