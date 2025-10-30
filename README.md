@@ -72,19 +72,7 @@ python src/train_model.py      # trains and saves model_bundle.pkl
 python src/evaluate.py         # prints Precision@10
 ```
 
-Docker
-Build and run locally:
-```bash
-docker build -t implicit-feedback-local:8080 .
-docker run -d --rm -p 8080:8080 implicit-feedback-local:8080
 
-# Health check:
-curl http://localhost:8080/ 
-# → {"status":"ok"}
-
-# Recommendations:
-curl "http://localhost:8080/recommend/1?N=5"
-```
 
 
 Google Cloud Deployment
